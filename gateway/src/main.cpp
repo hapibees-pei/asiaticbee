@@ -3,8 +3,9 @@
 #include <WebServer.h>
 #include <WiFi.h>
 
-WebServer Server;  // Replace with WebServer for ESP32
+WebServer Server;
 AutoConnect Portal(Server);
+AutoConnectConfig Config("Gateway", "");
 
 void rootPage() {
   char content[] = "Hello, world";
@@ -17,6 +18,9 @@ void setup() {
   Serial.println();
 
   Server.on("/", rootPage);
+
+  Portal.config(Config);
+
   if (Portal.begin()) {
     Serial.println("WiFi connected: " + WiFi.localIP().toString());
   }
