@@ -49,7 +49,7 @@ void setup() {
   //initialize OLED
   Wire.begin(OLED_SDA, OLED_SCL);
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3c, false, false)) { // Address 0x3C for 128x32
-    Serial.println(F("SSD1306 allocation failed"));
+    //Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
 
@@ -63,7 +63,7 @@ void setup() {
   //initialize Serial Monitor
   Serial.begin(115200);
 
-  Serial.println("LoRa Receiver Test");
+  //Serial.println("LoRa Receiver Test");
   
   //SPI LoRa pins
   SPI.begin(SCK, MISO, MOSI, SS);
@@ -71,16 +71,16 @@ void setup() {
   LoRa.setPins(SS, RST, DIO0);
 
   if (!LoRa.begin(BAND)) {
-    Serial.println("Starting LoRa failed!");
+    //Serial.println("Starting LoRa failed!");
     while (1);
   }
-  Serial.println("LoRa Initializing OK!");
+  //Serial.println("LoRa Initializing OK!");
   display.setCursor(0,10);
-  display.println("LoRa Initializing OK!");
+  //display.println("LoRa Initializing OK!");
   display.display();  
 }
 
-char* concat(int count, ...) {
+/*char* concat(int count, ...) {
     va_list ap;
     int i;
     // Find required length to store merged string
@@ -102,7 +102,7 @@ char* concat(int count, ...) {
     }
     va_end(ap);
     return merged;
-}
+}*/
 
 void loop() {
 
@@ -114,13 +114,13 @@ void loop() {
     //read packet
     while (LoRa.available()) {
       LoRaData = LoRa.readString();
-      buffer.push_back(LoRaData);
+      //buffer.push_back(LoRaData);
     }
 
-    char* res;
-    for (int i = 0; i < buffer.size(); ++i) {
-        res = concat(2, res, buffer[i].c_str());
-    }
+    // char* res;
+    // for (int i = 0; i < buffer.size(); ++i) {
+    //     res = concat(1, res, buffer[i].c_str());
+    // }
 
     //print RSSI of packet
     int rssi = LoRa.packetRssi();
@@ -128,9 +128,9 @@ void loop() {
     ss << rssi;
     std::string rssi_str = (ss.str());
 
-    std::string result = std::string("{reading: ")
-            + res
-            + std::string(", rssi: ")
+    std::string result = std::string("{\"reading\": \"")
+            + LoRaData.c_str()
+            + std::string("\", \"rssi\": ")
             + rssi_str
             + std::string("}");
 
