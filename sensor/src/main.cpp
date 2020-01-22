@@ -15,6 +15,7 @@
 
 //Libraries for OLED Display
 #include <Wire.h>
+#include "DHT.h"
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -39,9 +40,10 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-//BME280 definition
-#define SDA 21
-#define SCL 13
+//DHT definition
+#define DHTTYPE DHT11   // DHT 11
+#define DHTPIN 4     // Digital pin connected to the DHT sensor
+DHT dht(DHTPIN, DHTTYPE);
 
 //packet counter
 int readingID = 0;
@@ -101,19 +103,32 @@ void startLoRA(){
     delay(2000);
 }
 
-void startBME(){
-    //I2Cone.begin(SDA, SCL, 100000);
-    //bool status1 = bme.begin(0x76, &I2Cone);
-    //if (!status1) {
-    //    Serial.println("Could not find a valid BME280_1 sensor, check wiring!");
-    //    while (1);
-    //}
-}
+/*void startBME(){
+    // default settings
+    // (you can also pass in a Wire library object like &Wire2)
+    bool status = bme.begin(0x76, &I2Cone);
+    if (!status) {
+        display.clearDisplay();
+        display.setCursor(0,0);
+        display.setTextSize(1);
+        display.print("BME Failed");
+        display.display();
+        while (1);
+    }
+
+    display.clearDisplay();
+    display.setCursor(0,0);
+    display.setTextSize(1);
+    display.print("BME Started");
+    display.display();
+}*/
 
 void getReadings(){
-    temperature = 0;//bme.readTemperature();
-    humidity = 12;//bme.readHumidity();
-    pressure = 10;//bme.readPressure() / 100.0F;
+    temperature = dht.readTemperature();
+    humidity = dht.readHumidity();
+    Serial.print(temperature);
+    Serial.print(humidity);
+    //pressure = dht.readPressure() / 100.0F;
 }
 
 void sendReadings() {
@@ -130,7 +145,7 @@ void sendReadings() {
     display.setCursor(0,20);
     display.print("Temperature:");
     display.setCursor(72,20);
-    display.print(temperature);
+    display.print(String(temperature));
     display.setCursor(0,30);
     display.print("Humidity:");
     display.setCursor(54,30);
@@ -151,13 +166,14 @@ void sendReadings() {
 
 void setup() {
     //initialize Serial Monitor
-    Serial.begin(115200);
+    Serial.begin(9600);
     startOLED();
-    startBME();
     startLoRA();
+    dht.begin();
+    //startBME();
 }
 void loop() {
     getReadings();
     sendReadings();
-    delay(10000);
+    delay(2000);
 }
