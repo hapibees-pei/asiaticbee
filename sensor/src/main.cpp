@@ -1,24 +1,13 @@
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp32-lora-sensor-web-server/
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
-
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*********/
-
-//Libraries for LoRa
 #include <SPI.h>
 #include <LoRa.h>
 
 //Libraries for OLED Display
 #include <Wire.h>
-#include "DHT.h"
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
 
 //define the pins used by the LoRa transceiver module
 #define SCK 5
@@ -40,25 +29,29 @@
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
 
-//DHT definition
-#define DHTTYPE DHT11   // DHT 11
-#define DHTPIN 4     // Digital pin connected to the DHT sensor
-DHT dht(DHTPIN, DHTTYPE);
-
 //packet counter
 int readingID = 0;
 
 int counter = 0;
 String LoRaMessage = "";
 
-float temperature = 0;
-float humidity = 0;
-float pressure = 0;
 
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST);
 
+Adafruit_BME280 bme;
+
+
 //Initialize OLED display
 void startOLED(){
+  bool status = bme.begin(0x76);
+  if (!status) {
+    Serial.println("could not find a valid bme280 sensor, check wiring!");
+//    while (1);
+  } else {
+
+    Serial.println("We good!");
+  }
+
     //reset OLED display via software
     pinMode(OLED_RST, OUTPUT);
     digitalWrite(OLED_RST, LOW);
@@ -71,6 +64,7 @@ void startOLED(){
         Serial.println(F("SSD1306 allocation failed"));
         for(;;); // Don't proceed, loop forever
     }
+
     display.clearDisplay();
     display.setTextColor(WHITE);
     display.setTextSize(1);
@@ -124,15 +118,18 @@ void startLoRA(){
 }*/
 
 void getReadings(){
-    temperature = dht.readTemperature();
-    humidity = dht.readHumidity();
-    Serial.print(temperature);
-    Serial.print(humidity);
     //pressure = dht.readPressure() / 100.0F;
 }
 
 void sendReadings() {
-    LoRaMessage = String(readingID) + "&" + String(temperature) + "&" + String(humidity) + "&" + String(pressure);
+
+  String temperature = String(bme.readTemperature());
+  String humidity = String(bme.readHumidity());
+  String pressure = String(bme.readPressure());
+    Serial.print(temperature);
+    Serial.print(humidity);
+
+    LoRaMessage = String(readingID) + "&" + (temperature) + "&" + (humidity) + "&" + (pressure);
     //Send LoRa packet to receiver
     LoRa.beginPacket();
     LoRa.print(LoRaMessage);
@@ -169,7 +166,6 @@ void setup() {
     Serial.begin(9600);
     startOLED();
     startLoRA();
-    dht.begin();
     //startBME();
 }
 void loop() {
